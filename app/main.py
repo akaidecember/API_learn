@@ -56,6 +56,6 @@ def update_post(post_id : int, new_post : PostSchema):
     for index, post in enumerate(my_posts):
         if post['id'] == post_id:
             my_posts[index] = new_post.dict()
-            my_posts[index]['id'] = post_id  # Ensure the ID remains unchanged
+            my_posts[index]['id'] = post_id  
             return {"data": my_posts[index]}
     raise HTTPException(status_code=404, detail=f"Post {post_id} not found")
