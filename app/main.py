@@ -1,8 +1,4 @@
-import time
-from fastapi import Body, FastAPI, Response, status, HTTPException, Depends
-from pydantic import BaseModel
-import psycopg
-import json
+from fastapi import FastAPI, Response, status, HTTPException, Depends
 from . import models
 from .database import engine, get_db
 from sqlalchemy.orm import Session
@@ -18,7 +14,7 @@ app = FastAPI()
 # API route for the home page 
 @app.get("/")
 def read_root():
-    return {"home": "welcome to the home page"}
+    return "welcome to the home page"
 
 
 # API endpoint for getting all posts
@@ -26,11 +22,11 @@ def read_root():
 def read_posts(db : Session = Depends(get_db)):
     # Since we are using ORM, we can query the database using the ORM model
     posts = db.query(models.Post).all()
-    return {"data": posts}
+    return posts
 
 
 # API endpoint for creating a new post
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=ResponseSchema)
 def create_posts(post : PostCreateSchema, db : Session = Depends(get_db)):
     # Creating a new post object using the ORM model
     # **post.dict() will unpack the post object into a dictionary
@@ -38,7 +34,7 @@ def create_posts(post : PostCreateSchema, db : Session = Depends(get_db)):
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return {"new_post": new_post}
+    return new_post
 
 
 # API endpoint for getting a single specified post
@@ -47,7 +43,7 @@ def get_post(post_id: int, db : Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail = f"Post id : {post_id} not found")
-    return {"data": post}
+    return post
 
 
 # API endpoint for deleting a single specified post
@@ -70,4 +66,4 @@ def update_post(post_id : int, new_post : PostCreateSchema, db : Session = Depen
         raise HTTPException(status_code=404, detail=f"Post {post_id} not found")
     post_query.update(new_post.dict(), synchronize_session=False)
     db.commit()
-    return {"data": post_query.first()}
+    return post_query.first()
