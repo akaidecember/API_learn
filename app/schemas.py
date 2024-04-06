@@ -14,6 +14,3 @@ class ResponseSchema(PostBaseSchema):
     title: str
     content: str
     published: bool
-
-    class Config:
-        orm_mode = True
