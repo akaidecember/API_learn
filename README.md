@@ -29,6 +29,12 @@ To get started with this project, follow these steps:
 - Examples and tutorials for different API concepts.
 - Code snippets for common API use cases.
 
+## APIs document
+
+Documented APIs so far.
+
+![alt text](images/image.png)
+
 ## Contributing
 
 Contributions are welcome! If you have any suggestions, bug reports, or feature requests, please open an issue or submit a pull request.
