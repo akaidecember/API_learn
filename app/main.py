@@ -31,8 +31,7 @@ password = database_config['password']
 
 while True:
     try:
-        connection = psycopg.connect(host=host, dbname=dbname, user=user, 
-                                    password=password)
+        connection = psycopg.connect(host=host, dbname=dbname, user=user, password=password)
         cursor = connection.cursor()
         print("DB connection successful")
         ctr = 0
