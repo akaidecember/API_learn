@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import Body, FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
 import psycopg
+import json
 
 app = FastAPI()
 
@@ -11,18 +12,30 @@ class PostSchema(BaseModel):
     content: str
     published: bool = True
 
-# my_posts = [{"title": "title1", "content": "content1", "published": True, "id": 1},
-#             {"title": "title2", "content": "random", "published": False, "id": 2},]
-
 ctr = 0
+conf_filepath = 'db_config/db_conf.json'
+
+def read_config(file_path):
+    with open(file_path, 'r') as config_file:
+        config = json.load(config_file)
+    return config
+
+config = read_config(conf_filepath)
+
+database_config = config['database']
+
+host = database_config['host']
+dbname = database_config['dbname']
+user = database_config['user']
+password = database_config['password']
 
 while True:
     try:
-        connection = psycopg.connect(host="", dbname="", user="", 
-                                    password="")
-        # ^^^ Fill in ^^^
+        connection = psycopg.connect(host=host, dbname=dbname, user=user, 
+                                    password=password)
         cursor = connection.cursor()
         print("DB connection successful")
+        ctr = 0
         break
     except Exception as error:
         print("DB connection failed\nError: ", error)
