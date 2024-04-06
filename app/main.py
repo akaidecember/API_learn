@@ -1,95 +1,73 @@
 import time
-from typing import Optional
-from fastapi import Body, FastAPI, Response, status, HTTPException
+from fastapi import Body, FastAPI, Response, status, HTTPException, Depends
 from pydantic import BaseModel
 import psycopg
 import json
+from . import models
+from .database import engine, get_db
+from sqlalchemy.orm import Session
+from .schemas import *
 
+# Creating the tables in the database according to the models specified in models.py
+# If the table doesn't exist, it will be created in the postgres DB
+models.Base.metadata.create_all(bind=engine)
+
+# Initializing the FastAPI app
 app = FastAPI()
 
-class PostSchema(BaseModel):
-    title: str
-    content: str
-    published: bool = True
-
-ctr = 0
-conf_filepath = 'db_config/db_conf.json'
-
-def read_config(file_path):
-    with open(file_path, 'r') as config_file:
-        config = json.load(config_file)
-    return config
-
-config = read_config(conf_filepath)
-
-database_config = config['database']
-
-host = database_config['host']
-dbname = database_config['dbname']
-user = database_config['user']
-password = database_config['password']
-
-while True:
-    try:
-        connection = psycopg.connect(host=host, dbname=dbname, user=user, password=password)
-        cursor = connection.cursor()
-        print("DB connection successful")
-        ctr = 0
-        break
-    except Exception as error:
-        print("DB connection failed\nError: ", error)
-        time.sleep(2)
-        ctr += 1
-        if(ctr == 10):
-            print("DB connection failed 10 times. Exiting")
-            exit()
-
-
+# API route for the home page 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"home": "welcome to the home page"}
 
 
+# API endpoint for getting all posts
 @app.get("/posts")
-def read_posts():
-    cursor.execute("""SELECT * FROM posts""")
-    posts = cursor.fetchall()
+def read_posts(db : Session = Depends(get_db)):
+    # Since we are using ORM, we can query the database using the ORM model
+    posts = db.query(models.Post).all()
     return {"data": posts}
 
 
+# API endpoint for creating a new post
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_posts(post : PostSchema):
-    cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *""",
-                    (post.title, post.content, post.published))
-    new_post = cursor.fetchone()
-    connection.commit()
+def create_posts(post : PostCreateSchema, db : Session = Depends(get_db)):
+    # Creating a new post object using the ORM model
+    # **post.dict() will unpack the post object into a dictionary
+    new_post = models.Post(**post.dict())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
     return {"new_post": new_post}
 
 
+# API endpoint for getting a single specified post
 @app.get("/posts/{post_id}")
-def get_post(post_id: int): 
-    cursor.execute("""SELECT * FROM posts WHERE id = %s""", (post_id,))
-    post = cursor.fetchone()
+def get_post(post_id: int, db : Session = Depends(get_db)):
+    post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail = f"Post id : {post_id} not found")
     return {"data": post}
 
 
+# API endpoint for deleting a single specified post
 @app.delete("/posts/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(post_id : int):
-    cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING *""", (str(post_id),))
-    deleted_post = cursor.fetchone()
-    connection.commit()
-    if deleted_post == None:
+def delete_post(post_id : int, db : Session = Depends(get_db)):
+    deleted_post_query = db.query(models.Post).filter(models.Post.id == post_id)
+    if deleted_post_query.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = f"Post {post_id} not found")
+    deleted_post_query.delete(synchronize_session=False)
+    db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+# API endpoint for updating a single specified post
 @app.put("/posts/{post_id}")
-def update_post(post_id : int, new_post : PostSchema):
-    cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (new_post.title, new_post.content, new_post.published, post_id))
-    updated_post = cursor.fetchone()
-    connection.commit()
+def update_post(post_id : int, new_post : PostCreateSchema, db : Session = Depends(get_db)):
+    post_query = db.query(models.Post).filter(models.Post.id == post_id)
+    updated_post = post_query.first()
     if updated_post == None:
         raise HTTPException(status_code=404, detail=f"Post {post_id} not found")
-    return {"data": updated_post}
+    post_query.update(new_post.dict(), synchronize_session=False)
+    db.commit()
+    return {"data": post_query.first()}
