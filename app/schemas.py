@@ -1,5 +1,4 @@
- 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class PostBaseSchema(BaseModel):
@@ -10,7 +9,15 @@ class PostBaseSchema(BaseModel):
 class PostCreateSchema(PostBaseSchema):
     pass
 
-class ResponseSchema(PostBaseSchema):
+class ResponsePostSchema(PostBaseSchema):
     title: str
     content: str
     published: bool
+
+class UserCreateSchema(BaseModel):
+    email: EmailStr
+    password: str
+
+class ResponseUserSchema(BaseModel):
+    email: EmailStr
+    id: int
