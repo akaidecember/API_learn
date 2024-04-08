@@ -1,18 +1,6 @@
 from pydantic import BaseModel, EmailStr
+from datetime import datetime
 from typing import Optional
-
-class PostBaseSchema(BaseModel):
-    title: str
-    content: str
-    published: bool = True
-
-class PostCreateSchema(PostBaseSchema):
-    pass
-
-class ResponsePostSchema(PostBaseSchema):
-    title: str
-    content: str
-    published: bool
 
 class UserCreateSchema(BaseModel):
     email: EmailStr
@@ -25,6 +13,20 @@ class ResponseUserSchema(BaseModel):
 class UserLoginSchema(BaseModel):
     email: EmailStr
     password: str
+
+class PostBaseSchema(BaseModel):
+    title: str
+    content: str
+    published: bool = True
+
+class PostCreateSchema(PostBaseSchema):
+    pass
+
+class ResponsePostSchema(PostBaseSchema):
+    id: int
+    created_at: datetime
+    owner_id: int
+    owner: ResponseUserSchema
 
 class TokenSchema(BaseModel):
     access_token: str

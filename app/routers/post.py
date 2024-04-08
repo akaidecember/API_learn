@@ -14,7 +14,7 @@ router = APIRouter(
 def read_posts(db : Session = Depends(get_db), current_user : int = Depends(oauth2.get_current_user)):
 
     # Since we are using ORM, we can query the database using the ORM model
-    posts = db.query(models.Post).all()
+    posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
 
     return posts
 
@@ -24,8 +24,8 @@ def read_posts(db : Session = Depends(get_db), current_user : int = Depends(oaut
 def create_posts(post : PostCreateSchema, db : Session = Depends(get_db), 
                  current_user : int = Depends(oauth2.get_current_user)):
 
-    # Creating a new post object using the ORM model
-    new_post = models.Post(**post.model_dump())
+    # Creating a new post object using the ORM model and setting owner of the post to the curr. logged in user
+    new_post = models.Post(owner_id = current_user.id, **post.model_dump())
 
     db.add(new_post)
     db.commit()
@@ -50,10 +50,15 @@ def get_post(post_id: int, db : Session = Depends(get_db),
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(post_id : int, db : Session = Depends(get_db), 
                 current_user : int = Depends(oauth2.get_current_user)):
+    
     deleted_post_query = db.query(models.Post).filter(models.Post.id == post_id)
 
     if deleted_post_query.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = f"Post {post_id} not found")
+    
+    if current_user.id != db.query(models.Post).filter(models.Post.id == post_id).first().owner_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail = "You do not have permission to delete this post")
+
     deleted_post_query.delete(synchronize_session=False)
 
     db.commit()
@@ -71,6 +76,10 @@ def update_post(post_id : int, new_post : PostCreateSchema, db : Session = Depen
 
     if updated_post == None:
         raise HTTPException(status_code=404, detail=f"Post {post_id} not found")
+    
+    if current_user.id != db.query(models.Post).filter(models.Post.id == post_id).first().owner_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail = "You do not have permission to update this post")
+    
     post_query.update(new_post.model_dump(), synchronize_session=False)
     db.commit()
 
