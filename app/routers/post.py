@@ -1,16 +1,17 @@
 from fastapi import Response, status, HTTPException, Depends, APIRouter
-from .. import models
+from .. import models, oauth2
 from ..database import get_db
 from sqlalchemy.orm import Session
 from ..schemas import PostCreateSchema, ResponsePostSchema
 
 router = APIRouter(
-    prefix="/posts"
+    prefix="/posts",
+    tags=["Posts"]
 )
 
 # API endpoint for getting all posts
 @router.get("/", response_model=list[ResponsePostSchema])
-def read_posts(db : Session = Depends(get_db)):
+def read_posts(db : Session = Depends(get_db), current_user : int = Depends(oauth2.get_current_user)):
 
     # Since we are using ORM, we can query the database using the ORM model
     posts = db.query(models.Post).all()
@@ -20,7 +21,8 @@ def read_posts(db : Session = Depends(get_db)):
 
 # API endpoint for creating a new post
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponsePostSchema)
-def create_posts(post : PostCreateSchema, db : Session = Depends(get_db)):
+def create_posts(post : PostCreateSchema, db : Session = Depends(get_db), 
+                 current_user : int = Depends(oauth2.get_current_user)):
 
     # Creating a new post object using the ORM model
     new_post = models.Post(**post.model_dump())
@@ -34,16 +36,20 @@ def create_posts(post : PostCreateSchema, db : Session = Depends(get_db)):
 
 # API endpoint for getting a single specified post
 @router.get("/{post_id}", response_model=ResponsePostSchema)
-def get_post(post_id: int, db : Session = Depends(get_db)):
+def get_post(post_id: int, db : Session = Depends(get_db), 
+             current_user : int = Depends(oauth2.get_current_user)):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    
     if not post:
         raise HTTPException(status_code=404, detail = f"Post id : {post_id} not found")
+    
     return post
 
 
 # API endpoint for deleting a single specified post
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(post_id : int, db : Session = Depends(get_db)):
+def delete_post(post_id : int, db : Session = Depends(get_db), 
+                current_user : int = Depends(oauth2.get_current_user)):
     deleted_post_query = db.query(models.Post).filter(models.Post.id == post_id)
 
     if deleted_post_query.first() == None:
@@ -57,7 +63,8 @@ def delete_post(post_id : int, db : Session = Depends(get_db)):
 
 # API endpoint for updating a single specified post
 @router.put("/{post_id}", response_model=ResponsePostSchema)
-def update_post(post_id : int, new_post : PostCreateSchema, db : Session = Depends(get_db)):
+def update_post(post_id : int, new_post : PostCreateSchema, db : Session = Depends(get_db), 
+                current_user : int = Depends(oauth2.get_current_user)):
 
     post_query = db.query(models.Post).filter(models.Post.id == post_id)
     updated_post = post_query.first()

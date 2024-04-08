@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import json
 
-conf_filepath = 'db_config/db_conf.json'
+conf_filepath = 'config/db_conf.json'
 
 def read_config(file_path):
     with open(file_path, 'r') as config_file:

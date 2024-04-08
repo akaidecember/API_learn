@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-
+from typing import Optional
 
 class PostBaseSchema(BaseModel):
     title: str
@@ -21,3 +21,14 @@ class UserCreateSchema(BaseModel):
 class ResponseUserSchema(BaseModel):
     email: EmailStr
     id: int
+
+class UserLoginSchema(BaseModel):
+    email: EmailStr
+    password: str
+
+class TokenSchema(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenDataSchema(BaseModel):
+    id: Optional[int] = None

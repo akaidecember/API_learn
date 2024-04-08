@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from ..schemas import ResponseUserSchema, UserCreateSchema
 
 router = APIRouter(
-    prefix="/users"
+    prefix="/users",
+    tags=["Users"]
 )
 
 # API endpoint for creating a new user
