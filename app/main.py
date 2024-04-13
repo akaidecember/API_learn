@@ -20,5 +20,3 @@ app.include_router(authenticate.router)
 @app.get("/")
 def read_root():
     return "welcome to the home page"
-
-
