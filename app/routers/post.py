@@ -17,7 +17,7 @@ def read_posts(db : Session = Depends(get_db), current_user : int = Depends(oaut
     
     # print(limit)
     # Since we are using ORM, we can query the database using the ORM model
-    posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).limit(limit).offset(skip).all()
+    posts = db.query(models.Post).filter(models.Post.title.ilike(f"%{search}%")).limit(limit).offset(skip).all()
 
     return posts
 
