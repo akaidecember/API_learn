@@ -1,4 +1,4 @@
-# API_learn
+# post CRUD API
 
 This repository is dedicated to learning and refreshing API basics. It serves as a resource for understanding the fundamentals of working with APIs.
 
