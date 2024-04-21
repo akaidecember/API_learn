@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 from fastapi import Response, status, HTTPException, Depends, APIRouter
 from .. import models, oauth2
 from ..database import get_db
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from ..schemas import PostCreateSchema, ResponsePostSchema
+from ..schemas import PostCreateSchema, ResponsePostSchema, PostOutSchema
 
 router = APIRouter(
     prefix="/posts",
@@ -11,14 +12,15 @@ router = APIRouter(
 )
 
 # API endpoint for getting all posts
-@router.get("/", response_model=list[ResponsePostSchema])
+@router.get("/", response_model=List[PostOutSchema])
 def read_posts(db : Session = Depends(get_db), current_user : int = Depends(oauth2.get_current_user),
                limit : int = 10, skip : int = 0, search : Optional[str] = ""):
     
-    # print(limit)
     # Since we are using ORM, we can query the database using the ORM model
-    posts = db.query(models.Post).filter(models.Post.title.ilike(f"%{search}%")).limit(limit).offset(skip).all()
-
+    posts = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(
+            models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    
     return posts
 
 
@@ -38,10 +40,13 @@ def create_posts(post : PostCreateSchema, db : Session = Depends(get_db),
 
 
 # API endpoint for getting a single specified post
-@router.get("/{post_id}", response_model=ResponsePostSchema)
+@router.get("/{post_id}", response_model=PostOutSchema)
 def get_post(post_id: int, db : Session = Depends(get_db), 
              current_user : int = Depends(oauth2.get_current_user)):
-    post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    
+    post = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(
+            models.Post.id).filter(models.Post.id == post_id).first()
     
     if not post:
         raise HTTPException(status_code=404, detail = f"Post id : {post_id} not found")

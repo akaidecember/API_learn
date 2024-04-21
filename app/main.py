@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from . import models
 from .database import engine
 from .schemas import *
-from .routers import post, users, authenticate
+from .routers import post, users, authenticate, vote
 
 # Creating the tables in the database according to the models specified in models.py
 # If the table doesn't exist, it will be created in the postgres DB
@@ -15,6 +15,7 @@ app = FastAPI()
 app.include_router(post.router)
 app.include_router(users.router)
 app.include_router(authenticate.router)
+app.include_router(vote.router)
 
 # API route for the home page 
 @app.get("/")

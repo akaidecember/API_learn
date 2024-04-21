@@ -1,10 +1,12 @@
 from pydantic import BaseModel, EmailStr
+from pydantic.types import conint
 from datetime import datetime
 from typing import Optional
 
 class UserCreateSchema(BaseModel):
     email: EmailStr
     password: str
+    created_at: datetime
 
 class ResponseUserSchema(BaseModel):
     email: EmailStr
@@ -34,3 +36,11 @@ class TokenSchema(BaseModel):
 
 class TokenDataSchema(BaseModel):
     id: Optional[int] = None
+
+class VoteSchema(BaseModel):
+    post_id: int
+    dir: conint(le=1)
+
+class PostOutSchema(BaseModel):
+    Post: ResponsePostSchema
+    votes: int
