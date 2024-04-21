@@ -20,7 +20,8 @@ from .config import settings
 
 # https://stackoverflow.com/questions/73596058/creating-an-sqlalchemy-engine-based-on-psycopg3
 # To use psycopg3, connection string should be in the format: postgresql+psycopg...
-SQLALCHEMY_DB_URL = f"postgresql+psycopg://{settings.db_username}:{settings.db_pwd}@{settings.db_hostname}/{settings.db_name}"
+# postgres://USER:PASSWORD@INTERNAL_HOST:PORT/DATABASE
+SQLALCHEMY_DB_URL = f"postgresql+psycopg://{settings.db_username}:{settings.db_pwd}@{settings.db_hostname}:{settings.db_port}/{settings.db_name}"
 
 engine = create_engine(SQLALCHEMY_DB_URL)
 SessionLocal = sessionmaker(autoflush=False, bind=engine)

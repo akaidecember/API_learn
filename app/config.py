@@ -6,6 +6,7 @@ conf_filepath = '/etc/secrets/conf.json'
 
 class Settings(BaseSettings):
     db_hostname: str
+    db_port: int
     db_name: str
     db_username: str
     db_pwd: str
