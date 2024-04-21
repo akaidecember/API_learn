@@ -33,7 +33,7 @@ To get started with this project, follow these steps:
 
 Documented APIs so far.
 
-![alt text](images/image.png)
+![alt text](images/doc_image.png)
 
 ## Contributing
 
