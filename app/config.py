@@ -1,7 +1,8 @@
 import json
 from pydantic_settings import BaseSettings
 
-conf_filepath = 'config/db_conf.json'
+#conf_filepath = 'config/db_conf.json'
+conf_filepath = '/etc/secrets/conf.json'
 
 class Settings(BaseSettings):
     db_hostname: str
