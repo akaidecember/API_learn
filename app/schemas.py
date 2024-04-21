@@ -6,11 +6,11 @@ from typing import Optional
 class UserCreateSchema(BaseModel):
     email: EmailStr
     password: str
-    created_at: datetime
 
 class ResponseUserSchema(BaseModel):
     email: EmailStr
     id: int
+    created_at: datetime
 
 class UserLoginSchema(BaseModel):
     email: EmailStr

@@ -1,25 +1,16 @@
-import json
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from . import schemas, database, models
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from .config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-conf_filepath = 'config/secret.json'
-
-def read_config(file_path):
-    with open(file_path, 'r') as config_file:
-        config = json.load(config_file)
-    return config
-
-config = read_config(conf_filepath)
-
-SECRET_KEY = config['secret']['key']
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 def create_access_token(data : dict):
 
